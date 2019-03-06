@@ -2,10 +2,13 @@
 
 struct vars_t {
 	float aimbot = 0.f;
+	float silent = 0.f;
 	float autoshoot = 0.f;
 	float norecoil = 0.f;
 	float nospread = 0.f;
 	float wallhack = 0.f;
+	float chams = 0.f;
+	float chams_clr = 0.f;
 	float bhop = 0.f;
 	float highdamage = 0.f;
 	float shotgun_pellet_amt = 6.f;
@@ -18,6 +21,7 @@ struct vars_t {
 	float inf_ammo = 0.f;
 	float debug = 1.f;
 	float colorlist = 0.f;
+	float rand_skin = 0.f;
 
 	bool draw_menu = false;
 };

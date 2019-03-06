@@ -13,9 +13,12 @@ using startsound_t = void(__cdecl*)(const char*);
 using isvisible_t = bool(__cdecl*)(edict_t* self, edict_t* ent);
 using edictfree_t = void(__cdecl*)(edict_t* ent);
 using raytrace_t = trace_t(__cdecl*)(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
-using anglevec_t = void(__cdecl*)(vector angles, vector forward, vector right, vector up);
+using anglevec_t = void(__cdecl*)(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 using vecangle_t = void(__cdecl*)(vector &vec, vector &angles );
 using firebfg_t = void(__cdecl*)(edict_t* owner, vec3_t start, vec3_t dir, int dmg, int speed, float dmg_radius);
+using projsrc_t = void(__cdecl*)(gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
+using dmgthrualpha_t = BOOL(__cdecl*)(trace_t trace, edict_t* targ, edict_t* inflictor, vec3_t dst);
+using candamage_t = BOOL(__cdecl*)(edict_t* target, edict_t* attacker);
 
 namespace util
 {
@@ -27,7 +30,10 @@ namespace util
 	extern anglevec_t angle_vectors;
 	extern vecangle_t vector_angle;
 	extern raytrace_t trace;
-	
+	extern projsrc_t projsrc;
+	extern dmgthrualpha_t candamagethrualpha;
+	extern candamage_t candamage;
+
 	extern firebfg_t fire_bfg;
 	extern startsound_t playsound;
 
@@ -38,6 +44,9 @@ namespace util
 	extern void dump_edicts(int amt);
 	extern void hook_iat(const char* iat_module_name, const char* import_module_name, const char* fn_name, void* new_fn);
 	extern int draw_line(vector org, vector target, int a1 = 4, int a2 = 25);
+	extern bool _trace(edict_t* target, bool check_transparent);
+
+	extern void randomize_skin();
 
 	//provides memory patching capabilities
 	template<typename T>
@@ -48,6 +57,8 @@ namespace util
 		*reinterpret_cast<T*>(address) = value;
 		VirtualProtect(address, sizeof value, mem_flags, &mem_flags);
 	};
+
+	extern const char* rand_skin;
 
 	extern edict_t* get_cast(int index);
 }
@@ -69,4 +80,13 @@ namespace globalvars {
 
 	extern int cast_amount;
 	extern edict_t** cast_list;
+
+	extern vector* viewangles;
+	extern vector aim_angles;
+	extern vec3_t v_aim_angles;
+	extern int* current;
+	extern usercmd_t* usercmds;
+
+	extern usercmd_t* get_usercmd(int num);
+
 }

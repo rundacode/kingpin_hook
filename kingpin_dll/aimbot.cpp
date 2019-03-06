@@ -1,7 +1,8 @@
 #include "aimbot.h"
 #include "vars.h"
 
-std::vector <std::string> valid_weapons = { 
+const std::vector <std::string> valid_weapons = { 
+	"weapon_spistol",
 	"weapon_pistol",
 	"weapon_tommygun",
 	"weapon_heavymachinegun",
@@ -9,7 +10,6 @@ std::vector <std::string> valid_weapons = {
 };
 
 //game bug: rapid kills cause overflows
-
 namespace aimbot
 {
 	__declspec (noinline) void aim()
@@ -29,7 +29,7 @@ namespace aimbot
 		//can aim, but we can't shoot with bare hands!
 		if (!globalvars::local_player->client->pers.weapon)
 			return;
-		
+
 		//check if we have our inventory thing init'd
 		if (globalvars::local_player->client)
 		{
@@ -45,11 +45,17 @@ namespace aimbot
 			}
 		}
 
+		//Might wanna adjust height for crouching enemies
 		vector temp = target->s.origin;
 		if (strstr(target->classname, "cast_dog"))
 		{
 			//sort of fix for dogs
 			temp.z -= (target->viewheight + 12.f);
+		}
+		else
+		{
+			if (target->maxs[2] < target->cast_info.standing_max_z)
+				temp.z = 24.f;
 		}
 
 		vector direction =  temp - globalvars::local_player->s.origin;
@@ -62,8 +68,16 @@ namespace aimbot
 		float delta_pitch = SHORT2ANGLE(*(short*)0x0134FBFC);
 		float delta_yaw = SHORT2ANGLE(*(short*)0x0134FBFE);
 
-		viewangles->x = (pitch) * (180 / M_PI) - delta_pitch;
-		viewangles->y = yaw * (180 / M_PI) - delta_yaw;
+		if (vars.silent)
+		{
+			globalvars::v_aim_angles[0] = pitch * (180 / M_PI);
+			globalvars::v_aim_angles[1] = yaw * (180 / M_PI); //preserve rotation
+		}
+		else
+		{
+			viewangles->x = pitch * (180 / M_PI) - delta_pitch;
+			viewangles->y = yaw * (180 / M_PI) - delta_yaw;
+		}
 
 		if (vars.autoshoot)
 		{
@@ -99,11 +113,20 @@ namespace aimbot
 
 			if (strstr(ent->classname, "cast_") && !strstr(ent->classname, "cast_bum_sit")) //bums dindu nuffin
 			{				
+				//Blunt has enormous amount of health (~150k) and not godmodded
+				//But I'll put this check anyway
+				if (ent->flags & FL_GODMODE)
+					continue;
+
 				if (globalvars::local_player)
 				{
-					//fails to check thru some transparent AND shootable surfaces
-					if (!util::is_visible(globalvars::local_player, ent)) 
+					if(!util::_trace(ent, true))
 						continue;
+
+					//This guy here isn't really good :-)
+					//But it's "CanDamageThroughAlpha" method is!
+					/*if (!util::candamage(ent, globalvars::local_player))
+						continue;*/
 				}
 
 				float player_distance = globalvars::local_player->s.origin.distance(ent->s.origin);

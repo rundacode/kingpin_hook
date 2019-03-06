@@ -44,6 +44,22 @@ typedef unsigned char 		byte;
 #define	PART_CIGAR				5
 #define PART_HAT				6
 
+// edict->flags
+#define	FL_FLY					0x00000001
+#define	FL_SWIM					0x00000002	// implied immunity to drowining
+#define FL_IMMUNE_LASER			0x00000004
+#define	FL_INWATER				0x00000008
+#define	FL_GODMODE				0x00000010
+#define	FL_NOTARGET				0x00000020
+#define FL_IMMUNE_SLIME			0x00000040
+#define FL_IMMUNE_LAVA			0x00000080
+#define	FL_PARTIALGROUND		0x00000100	// not all corners are valid
+#define	FL_WATERJUMP			0x00000200	// player jumping out of water
+#define	FL_TEAMSLAVE			0x00000400	// not the first on the team
+#define FL_NO_KNOCKBACK			0x00000800
+#define FL_POWER_ARMOR			0x00001000	// power armor (if any) is active
+
+
 #define	ERR_FATAL			0		// exit the entire game with a popup window
 #define	ERR_DROP			1		// print to console and disconnect from game
 #define	ERR_DISCONNECT		2		// don't kill server
@@ -260,6 +276,8 @@ COLLISION DETECTION
 // FIXME: eliminate AREA_ distinction?
 #define	AREA_SOLID		1
 #define	AREA_TRIGGERS	2
+
+#define	CMD_BACKUP		64
 
 // usercmd_t is sent to the server each client frame
 typedef struct usercmd_s

@@ -2,6 +2,8 @@
 #include "globals.h"
 #include "vars.h"
 
+vec3_t vec3_origin = { 0,0,0 };
+
 printf_t util::com_printf = (printf_t)0x42050D;
 finditem_t util::find_item = (finditem_t)0x2004FD95;
 findbyclass_t util::find_by_classname = (findbyclass_t)0x2004FD35;
@@ -10,9 +12,12 @@ startsound_t util::playsound = (startsound_t)0x43BEF0;
 isvisible_t util::is_visible = (isvisible_t)0x2002DDE0;
 executebuf_t util::executebuf = (executebuf_t)0x41CEF0;
 raytrace_t util::trace = (raytrace_t)0x448C39;
+projsrc_t util::projsrc = (projsrc_t)0x200A3AD7;
+dmgthrualpha_t util::candamagethrualpha = (dmgthrualpha_t)0x20040A10;
+candamage_t util::candamage = (candamage_t)0x20040B30;
 
 //converts angles into vectors
-anglevec_t util::angle_vectors = (anglevec_t)0x437FAC;
+anglevec_t util::angle_vectors = (anglevec_t)0x200A974C;
 //converts vectors into angles
 vecangle_t util::vector_angle = (vecangle_t)0x200A9400;
 
@@ -42,10 +47,25 @@ namespace globalvars {
 
 	int cast_amount = globalvars::locals->num_characters;
 	edict_t** cast_list = globalvars::locals->characters;
+
+	vector* viewangles = (vector*)0x01353274;
+	vector aim_angles = { 0,0,0 };
+	vec3_t v_aim_angles = { 0,0,0 };
+	int* current = (int*)0x127A260;
+	usercmd_t* usercmds = (usercmd_t*)0x134F50C;
+
+	//To get the most recent usercmd -> pass "current"
+	//Previous -> current - 1
+	usercmd_t* get_usercmd(int num)
+	{
+		return &usercmds[num & CMD_BACKUP];
+	}
 }
 
 namespace util {
 	
+	const char* rand_skin = "001 001 001";
+
 	void draw_string(int x, int y, int background, bool is_white, const char* string, ...)
 	{
 		char buffer[256];
@@ -69,9 +89,48 @@ namespace util {
 		}
 	}
 
+	//Shoots a trace. Easy.
+	bool _trace(edict_t* target, bool check_transparent)
+	{
+		vec3_t	spot1;
+		vec3_t	spot2;
+		trace_t	trace;
+
+		auto VecCopy = [&](const vector a, vec3_t b) -> void
+		{
+			b[0] = a.x;
+			b[1] = a.y;
+			b[2] = a.z;
+		};
+
+		VecCopy(globalvars::local_player->s.origin, spot1);
+		spot1[2] += globalvars::local_player->viewheight;
+		VecCopy(target->s.origin, spot2);
+		spot2[2] += target->viewheight;
+		trace = globalvars::game_import->trace(spot1, vec3_origin, vec3_origin, spot2, globalvars::local_player, 
+			CONTENTS_SOLID|CONTENTS_AUX|CONTENTS_LAVA|CONTENTS_SLIME);
+
+		if (trace.fraction == 1.0)
+			return true;
+		else //fraction wasn't exactly what we wanted, let's try to trace through transparent surfaces (if there are any)
+			if (check_transparent && ((trace.ent) && (trace.ent->s.renderfx2 & RF2_SURF_ALPHA)) || (trace.contents & SURF_ALPHA))
+				return (util::candamagethrualpha(trace, target, globalvars::local_player, spot2));
+
+		return false;
+	}
+
 	edict_t* get_cast(int index)
 	{
 		return *reinterpret_cast<edict_t**>(uintptr_t(globalvars::cast_list) + index * 0x4);
+	}
+
+	
+	void randomize_skin()
+	{
+		if (vars.rand_skin)
+			rand_skin = "010 045 023";
+		else
+			rand_skin = "001 001 001"; //default
 	}
 
 	void dump_edicts(int amt)

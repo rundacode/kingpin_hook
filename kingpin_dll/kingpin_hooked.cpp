@@ -18,10 +18,12 @@ namespace original
 	firelead_t o_firelead;
 	basemove_t o_basemove;
 	runframe_t o_runframe;
+	calcviewangles_t o_calcviewangles;
 	finishmove_t o_finishmove;
 	findindex_t o_findindex;
 	clientthink_t o_clientthink;
 	parselaser_t o_parselaser;
+	sendcmd_t o_sendcmd;
 	//Renderer
 	
 	glimp_endframe_t o_endframe;
@@ -39,37 +41,59 @@ namespace cheat
 
 		original::o_clientthink = (clientthink_t)DetourFunction((PBYTE)0x20096EFA, (PBYTE)cheat::hooked_ClientThink);
 		original::o_runframe = (runframe_t)DetourFunction((PBYTE)0x2006E499, (PBYTE)cheat::hooked_RunFrame);
-
-		//Can't really do this
-		//GameAPI struct doesn't get initialized the moment game library is loaded
-		//so if it gets reloaded, we won't hook anything
-
-		/*original::o_runframe = globalvars::game_api->RunFrame;
-		globalvars::game_api->RunFrame = cheat::hooked_RunFrame;*/
 	}
-	
+
 	void hooked_FireBullet(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod)
 	{
 		//checking for classname isn't really needed, since player always has index 1
 		if (self->s.number == 1 && std::strstr(self->classname, "player"))
 		{
-			if(vars.nospread)
+			if (vars.nospread)
 				hspread = vspread = 0;
 
-			if(vars.highdamage)
+			if (vars.highdamage)
 				damage = 1337;
+
+			//kick = INT_MAX;
 
 			printf("[kingpin_hook] bullet: spread %d, %d / mod %d / damage %d\n", hspread, vspread, mod, damage);
 
-			//uff ja $
-			if(vars.bfg_charges)
+			if (vars.silent && globalvars::target)
 			{
-				util::fire_bfg(self, start, aimdir, 3000, 800, 1600);
-				return;
+				//how this works:
+				//we get aim angles from aimbot, but do not substract delta angles
+				//so that anglevectors rotates stuff properly, otherwise we'll shoot
+				//somewhere else
+				
+				util::angle_vectors(globalvars::v_aim_angles, aimdir, 0, 0);
 			}
 
+			//uff ja $
+			if (vars.bfg_charges)
+			{
+				util::fire_bfg(self, start, aimdir, 13337, 250, 5000);
+				return;
+			}
 		}
+
 		original::o_firebullet(self, start, aimdir, damage, kick, hspread, vspread, mod);
+
+		if (self->s.number == 1 && vars.norecoil)
+		{
+			self->client->kick_origin[0] = 0.f;
+			self->client->kick_origin[1] = 0.f;
+			self->client->kick_origin[2] = 0.f;
+
+			self->client->kick_angles[0] = 0.f;
+			self->client->kick_angles[1] = 0.f;
+			self->client->kick_angles[2] = 0.f;
+		}
+	}
+
+	void hooked_SendCmd()
+	{
+
+		original::o_sendcmd();
 	}
 
 	void hooked_FireShotgun(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod)
@@ -88,8 +112,24 @@ namespace cheat
 			//for lulz
 			kick = 32768;
 			printf("[kingpin_hook] shotgun: spread %d, %d / mod %d / damage %d\n", hspread, vspread, mod, damage * count);
+
+			if (vars.silent && globalvars::target)
+			{
+				util::angle_vectors(globalvars::v_aim_angles, aimdir, 0, 0);
+			}
 		}
 		original::o_fireshotgun(self, start, aimdir, damage, kick, hspread, vspread, count, mod);
+
+		if (self->s.number == 1 && vars.norecoil)
+		{
+			self->client->kick_origin[0] = 0.f;
+			self->client->kick_origin[1] = 0.f;
+			self->client->kick_origin[2] = 0.f;
+
+			self->client->kick_angles[0] = 0.f;
+			self->client->kick_angles[1] = 0.f;
+			self->client->kick_angles[2] = 0.f;
+		}
 	}
 
 	void hooked_FireLead(int kick, int damage, edict_t* self, vec3_t start, vec3_t aimdir, temp_event_t type, int hspread, int vspread, int mod)
@@ -101,17 +141,15 @@ namespace cheat
 
 	int hooked_BaseMove(usercmd_t* cmd)
 	{
-
 		return original::o_basemove(cmd);
 	}
 
 	int hooked_FinishMove(usercmd_t* cmd)
 	{
-		static bool did_print = false;
-		if (!did_print)
+		if (vars.bhop && globalvars::local_player)
 		{
-			printf("[kingpin_hook] cmd: 0x%X\n", cmd);
-			did_print = true;
+			if (!(globalvars::local_player->client->ps.pmove.pm_flags & PMF_ON_GROUND) && globalvars::local_player->client->ps.pmove.pm_flags & PMF_JUMP_HELD)
+				globalvars::local_player->client->ps.pmove.pm_flags &= ~PMF_JUMP_HELD;
 		}
 
 		return original::o_finishmove(cmd);
@@ -141,16 +179,47 @@ namespace cheat
 			auto ent = globalvars::game_api->GetEntity(old->number);
 			if (globalvars::local_player && ent)
 			{
+				if (vars.chams)
+				{
+					if (ent->classname && strstr(ent->classname, "cast_")) {
+						switch ((int)vars.chams_clr)
+						{
+						case 0:
+							old->renderfx |= RF_SHELL_RED;
+							old->renderfx &= ~RF_SHELL_GREEN;
+							old->renderfx &= ~RF_SHELL_BLUE;
+						case 1:
+							old->renderfx &= ~RF_SHELL_RED;
+							old->renderfx |= RF_SHELL_GREEN;
+							old->renderfx &= ~RF_SHELL_BLUE;
+						case 2:
+							old->renderfx &= ~RF_SHELL_RED;
+							old->renderfx &= ~RF_SHELL_GREEN;
+							old->renderfx |= RF_SHELL_BLUE;
+						}
+					}
+				}
+				else
+				{
+					if (ent && ent->classname && strstr(ent->classname, "cast_"))
+					{
+						old->renderfx &= ~RF_SHELL_RED;
+						old->renderfx &= ~RF_SHELL_GREEN;
+						old->renderfx &= ~RF_SHELL_BLUE;
+					}
+				}
+
 				if (vars.wallhack)
 				{
 					old->renderfx |= RF_DEPTHHACK;
-					if (ent && ent->classname && strstr(ent->classname, "item_")) //make items highlighted, sort of.
+
+					if (ent->classname && strstr(ent->classname, "item_")) //make items highlighted, sort of.
 						old->effects |= (1 << 4); //if you wonder why crates suddenly "explode" or vent bits have fires on them, this is why
 				}
 				else
 				{
 					old->renderfx &= ~RF_DEPTHHACK;
-					if (ent && ent->classname && strstr(ent->classname, "item_"))
+					if (ent->classname && strstr(ent->classname, "item_"))
 						old->effects &= ~(1 << 4);
 				}
 			}
@@ -206,8 +275,8 @@ namespace cheat
 				globalvars::local_player->client->pers.weapon_clip[globalvars::local_player->client->clip_index] = 999;
 
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("308cal"))] = 999;
-				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Rockets"))] = 999;
-				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Gas"))] = 999;
+				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("rockets"))] = 999;
+				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("gas"))] = 999;
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Shells"))] = 999;
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Bullets"))] = 999;
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Grenades"))] = 999;
@@ -289,6 +358,7 @@ namespace cheat
 					//wanna shoot in the bar? just edit this variable
 					util::draw_string(20, 124, 0, true, "bar lvl: %s", globalvars::locals->bar_lvl ? "it's da bar" : "nope, not bar");
 					util::draw_string(20, 132, 0, true, "locals 0x%X", globalvars::locals);
+					util::draw_string(20, 140, 0, true, "current cmd num: %d", *globalvars::current & CMD_BACKUP);
 				}
 			}
 		}
