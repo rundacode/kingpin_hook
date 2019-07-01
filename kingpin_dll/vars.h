@@ -6,6 +6,7 @@ struct vars_t {
 	float autoshoot = 0.f;
 	float norecoil = 0.f;
 	float nospread = 0.f;
+	float esp = 0.f;
 	float wallhack = 0.f;
 	float chams = 0.f;
 	float chams_clr = 0.f;

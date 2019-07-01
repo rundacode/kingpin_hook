@@ -20,9 +20,12 @@ candamage_t util::candamage = (candamage_t)0x20040B30;
 anglevec_t util::angle_vectors = (anglevec_t)0x200A974C;
 //converts vectors into angles
 vecangle_t util::vector_angle = (vecangle_t)0x200A9400;
+vectorma_t util::vector_ma = (vectorma_t)0x200AA49D;
 
 
 firebfg_t util::fire_bfg = (firebfg_t)0x2008C53E;
+firerail_t util::fire_rail = (firerail_t)0x2008BC89;
+fireblaster_t util::fire_blaster = (fireblaster_t)0x2008A5DC;
 edictfree_t util::free_entity = (edictfree_t)0x2008822C;
 
 namespace globalvars {
@@ -119,11 +122,17 @@ namespace util {
 		return false;
 	}
 
+	void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
+	{
+		vecc[0] = veca[0] + scale * vecb[0];
+		vecc[1] = veca[1] + scale * vecb[1];
+		vecc[2] = veca[2] + scale * vecb[2];
+	}
+
 	edict_t* get_cast(int index)
 	{
 		return *reinterpret_cast<edict_t**>(uintptr_t(globalvars::cast_list) + index * 0x4);
 	}
-
 	
 	void randomize_skin()
 	{
@@ -142,8 +151,6 @@ namespace util {
 		}
 	}
 
-	//rebuild of what NAV_DrawLine does, was rebuilt to see what those integers are
-	//nothing interesting, alas..
 	int draw_line(vector org, vector dst, int a1, int a2)
 	{
 		using unk_t = void(__cdecl*)(int);

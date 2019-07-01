@@ -79,6 +79,8 @@ typedef unsigned char 		byte;
 
 #define svc_stufftext		13
 
+#define MODEL_VIEW			0x1006CC40
+
 // destination class for gi.multicast()
 typedef enum
 {
@@ -277,6 +279,16 @@ COLLISION DETECTION
 #define	AREA_SOLID		1
 #define	AREA_TRIGGERS	2
 
+typedef struct sizebuf_s
+{
+	BOOL	allowoverflow;	// if false, do a Com_Error
+	BOOL	overflowed;		// set to true if the buffer size failed
+	byte	*data;
+	int		maxsize;
+	int		cursize;
+	int		readcount;
+} sizebuf_t;
+
 #define	CMD_BACKUP		64
 
 // usercmd_t is sent to the server each client frame
@@ -392,7 +404,7 @@ public:
 	vector operator + (vector const &o) { vector v = *this; v += o; return v; }
 	vector operator - (vector const &o) { vector v = *this; v -= o; return v; }
 
-	float dot(vector Vec) { return this->x * Vec.x + this->y * Vec.y + this->z * Vec.z; }
+	float dot(const vector& Vec) { return this->x * Vec.x + this->y * Vec.y + this->z * Vec.z; }
 	float length() { return sqrt(x*x + y * y + z * z); }
 	float length2d() { return sqrt(x*x + y * y); }
 	void normalize() { *this /= length(); }

@@ -67,6 +67,7 @@ namespace kingpin_menu
 		add_item("autoshoot", "starts shooting if there's a valid enemy", &vars.autoshoot);
 		add_item("norecoil", "removes gun recoil", &vars.norecoil);
 		add_item("nospread", "forces bullet weapons to have no spread", &vars.nospread);
+		add_item("esp", "well, it's esp", &vars.esp);
 		add_item("bunnyhop", "forces player to jump and gain momentum", &vars.bhop);
 		add_item("wallhack", "renders entities through walls", &vars.wallhack);
 		add_item("chams", "npcs are drawn in solid bright color", &vars.chams);
@@ -74,7 +75,7 @@ namespace kingpin_menu
 		add_item("godmode", "infinte health and armor", &vars.godmode);
 		add_item("infinite money", "buy all the shit", &vars.money);
 		add_item("high damage", "rips enemies a new one in one shot", &vars.highdamage);
-		add_item("bfg projectiles", "pistol and tommygun will shoot bfg charges", &vars.bfg_charges);
+		add_item("custom projectiles", "1 - bfg, 2 - rail, 3 - blaster", &vars.bfg_charges, 0, 4);
 		add_item("shotgun pellet amount", "self-explainatory", &vars.shotgun_pellet_amt, 1.f, 20.f);
 		add_item("infinite ammo", "self-explainatory", &vars.inf_ammo);
 		add_item("unlimited mods", "weapon mods never break", &vars.inf_mods);

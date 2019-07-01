@@ -8,14 +8,15 @@
 using firebullet_t = void(__cdecl*)(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod);
 using fireshotgun_t = void(__cdecl*)(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod);
 using firelead_t = void(__cdecl*)(int kick, int damage, edict_t* self, vec3_t start, vec3_t aimdir, temp_event_t type, int hspread, int vspread, int mod);
-using basemove_t = int(__cdecl*)(usercmd_t* cmd);
+using basemove_t = void(__cdecl*)(usercmd_t* cmd);
 using runframe_t = void(__cdecl*)();
 using calcviewangles_t = void(__cdecl*)(); //00406C70
 using parselaser_t = void(__cdecl*)(int colors);
-using finishmove_t = int(__cdecl*)(usercmd_t* cmd);
+using finishmove_t = void(__cdecl*)(usercmd_t* cmd);
 using clientthink_t = void(__cdecl*)(edict_t* client, usercmd_t* cmd);
 using findindex_t = int(__cdecl*)(const char* name, int start, int max, bool create);
 using drawline_t = void(__cdecl*)(vector*, vector*); //200AF190
+using voicespecific_t = void(__cdecl*)(edict_t*, edict_t*, void*, int);
 using sendcmd_t = void(__cdecl*)();
 
 //renderer
@@ -36,6 +37,7 @@ namespace original
 	extern clientthink_t o_clientthink;
 	extern parselaser_t o_parselaser;
 	extern sendcmd_t o_sendcmd;
+	extern voicespecific_t o_voicespecific;
 
 	extern glimp_endframe_t o_endframe;
 	extern renderframe_t o_renderframe;
@@ -48,18 +50,20 @@ namespace cheat
 	void hooked_FireShotgun(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod);
 	void hooked_FireLead(int kick, int damage, edict_t* self, vec3_t start, vec3_t aimdir, temp_event_t type, int hspread, int vspread, int mod);
 	void hooked_RunFrame();
-	void hooked_CalcViewAngles();
+	void hooked_SendCommand();
 	void hooked_ParseLaser(int colors);
 	void hooked_ClientThink(edict_t* client, usercmd_t* cmd);
 	void hooked_SendCmd();
 	HMODULE __stdcall hooked_LoadLibrary(LPCSTR module_name);
-	int hooked_BaseMove(usercmd_t* cmd);
-	int hooked_FinishMove(usercmd_t* cmd);
+	void hooked_BaseMove(usercmd_t* cmd);
+	void hooked_FinishMove(usercmd_t* cmd);
 	int hooked_FindIndex(const char* name, int start, int max, bool create);
 
 	void hooked_EndFrame();
 	void hooked_DeltaEntity(frame_t* frame, int newnum, entity_state_t* old, int bits);
 	void hooked_RenderFrame(refdef_t* rd);
+
+	void hooked_VoiceSpecific(edict_t*, edict_t*, void*, int);
 
 	void SetupGameLibHooks();
 }

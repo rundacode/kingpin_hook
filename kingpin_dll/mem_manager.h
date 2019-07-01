@@ -9,11 +9,8 @@
 
 //Memory manager uses game's native functions to
 //free the edicts
-class c_mem_manager
+namespace c_mem_manager
 {
-public:
 	//Checks if any edicts need to be freed
-	void check_edicts();
-	//Free an edict at given pointer
-	void free_edict(void* ptr);
+	extern void check_edicts();
 };

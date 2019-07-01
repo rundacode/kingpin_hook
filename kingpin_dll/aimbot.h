@@ -9,4 +9,5 @@ namespace aimbot
 {
 	extern void aim();
 	extern edict_t* get_target();
+	extern void triggerbot();
 }

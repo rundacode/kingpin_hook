@@ -24,7 +24,9 @@ namespace aimbot
 
 		//would be suitable for ESP or some shit
 		//laser colors can be changed in hooked_ParseLaser
-		util::draw_line(globalvars::local_player->s.origin, target->s.origin, svc_temp_entity, TE_BFG_LASER);
+		//I've commented this out becase this can cause overflows
+		//since bfg laser is a temp entity which writes into a datagram, etc etc w/e
+		//util::draw_line(globalvars::local_player->s.origin, target->s.origin, svc_temp_entity, TE_BFG_LASER);
 
 		//can aim, but we can't shoot with bare hands!
 		if (!globalvars::local_player->client->pers.weapon)
@@ -105,9 +107,9 @@ namespace aimbot
 		edict_t* temp_target = nullptr;
 		float distance = 0.f;
 
-		for (int i = 1; i <= globalvars::cast_amount; i++)
+		for (int i = 0; i < MAX_CHARACTERS; i++)
 		{
-			edict_t* ent = util::get_cast(i);
+			edict_t* ent = globalvars::locals->characters[i];
 			if (!ent || !ent->classname || ent->health <= 0 || ent->movetype != MOVETYPE_STEP)
 				continue;
 
@@ -140,5 +142,43 @@ namespace aimbot
 
 		globalvars::target = temp_target;
 		return temp_target;
+	}
+
+	//todo: find out why this shit traces god knows where
+	void triggerbot()
+	{
+		if (!globalvars::refdef)
+			return;
+
+		vec3_t start, forward, right, end;
+		trace_t trace;
+		
+
+		vec3_t origin{ globalvars::local_player->s.origin.x, globalvars::local_player->s.origin.y, globalvars::local_player->s.origin.z  };
+		vec3_t offset{ 0,0,0 };
+
+		util::angle_vectors(&globalvars::local_player->s.angles.x, forward, right, 0);
+
+		//util::projsrc(globalvars::local_player->client, origin, offset, forward, right, start);
+		util::vector_ma(start, 4096.f, forward, end);
+
+		//debug
+		util::draw_line(origin, end);
+
+		trace = globalvars::game_import->trace(start, vec3_origin, vec3_origin, forward, globalvars::local_player, MASK_SHOT);
+		if (trace.ent && trace.fraction >= 0.97f)
+		{
+			if (strstr(trace.ent->classname, "cast_"))
+			{
+				printf("[kingpin_hook] triggerbot caught entity\n");
+				__asm
+				{
+					mov eax, 0x40b7e0
+					call eax
+					mov eax, 0x40b7f0
+					call eax
+				}
+			}
+		}
 	}
 }

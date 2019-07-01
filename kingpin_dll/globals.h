@@ -15,7 +15,10 @@ using edictfree_t = void(__cdecl*)(edict_t* ent);
 using raytrace_t = trace_t(__cdecl*)(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
 using anglevec_t = void(__cdecl*)(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 using vecangle_t = void(__cdecl*)(vector &vec, vector &angles );
+using vectorma_t = void(_cdecl*)(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 using firebfg_t = void(__cdecl*)(edict_t* owner, vec3_t start, vec3_t dir, int dmg, int speed, float dmg_radius);
+using firerail_t = void(__cdecl*)(edict_t* owner, vec3_t start, vec3_t dir, int dmg, int kick);
+using fireblaster_t = void(__cdecl*)(edict_t* owner, vec3_t start, vec3_t dir, int dmg, int speed, int effect, BOOL is_hyper);
 using projsrc_t = void(__cdecl*)(gclient_t *client, vec3_t point, vec3_t distance, vec3_t forward, vec3_t right, vec3_t result);
 using dmgthrualpha_t = BOOL(__cdecl*)(trace_t trace, edict_t* targ, edict_t* inflictor, vec3_t dst);
 using candamage_t = BOOL(__cdecl*)(edict_t* target, edict_t* attacker);
@@ -33,8 +36,11 @@ namespace util
 	extern projsrc_t projsrc;
 	extern dmgthrualpha_t candamagethrualpha;
 	extern candamage_t candamage;
+	extern vectorma_t vector_ma;
 
 	extern firebfg_t fire_bfg;
+	extern firerail_t fire_rail;
+	extern fireblaster_t fire_blaster;
 	extern startsound_t playsound;
 
 	extern addtext_t addtext;
