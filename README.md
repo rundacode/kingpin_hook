@@ -1,6 +1,27 @@
 # kingpin_hook
-Simple (or not?) clienthook for Kingpin game
+## Kingpin: Life of Crime internal cheat
 
-I've included a "memory manager" (sort of) recently and it just werks.
-It calls game's memory cleaning funcs on dead characters, so that you could spawn more of them (up to the 64 chars max (including player)).
-Usually, when they die, they're still being present in the game's memory and once you hit the limit of 64 chars, you can't spawn any more, my memory manager kinda fixes that, although it's ghetto: if someone's died, his body will disappear due to the cleaning. If you don't want for this to happen, simply comment the call out (it's somewhere in the hooks, can't remember now).
+This is a fully-featured Kingpin clienthook, which was written out of boredom while I was thinking of replaying the game.
+
+**This cheat DOES NOT work online!**
+I didn't really bother myself with taking a look at how the game works online, since if you're playing online, the game doesn't load gamex86.dll, which is the reason why cheat doesn't work in multiplayer.
+
+### This cheat includes:
++ Aimbot
++ Silent Aimbot
++ Classic Wallhack
++ Chams (kinda broken atm)
++ God Mode
++ Infinite Ammo
++ Infinite Armor
++ Rapid Fire
++ Speedhack
++ Change pellet amount per shot for shotgun
++ Change bullet type for bullet-based weapons (Pistol, Tommy, HMG start shooting BFG projectiles, hyperblaster cells or railgun slugs)
++ Bunnyhop
+
+**This cheat works with both GoG and Steam versions of Kingpin!!**
+
+***If you want to use debugger for some reason and you're running Steam version of the game, make sure you use Steamless on kingpin.exe first, or else debugger won't catch shit due to Steam DRM's anti-debugger***
+
+The addresses are pretty much the same.
