@@ -1,5 +1,4 @@
-# kingpin_hook
-## Kingpin: Life of Crime internal cheat
+# Kingpin: Life of Crime internal cheat
 
 This is a fully-featured Kingpin clienthook, which was written out of boredom while I was thinking of replaying the game.
 
@@ -11,6 +10,7 @@ I didn't really bother myself with taking a look at how the game works online, s
 + Silent Aimbot
 + Classic Wallhack
 + Chams (kinda broken atm)
++ ESP
 + God Mode
 + Infinite Ammo
 + Infinite Armor
