@@ -1,6 +1,7 @@
 #include "kingpin_hooked.h"
 #include "mem_manager.h"
 #include "aimbot.h"
+#include "visuals.h"
 #include "menu.h"
 #include "vars.h"
 #include "globals.h"
@@ -16,7 +17,7 @@ gitem_s* itemlist = (gitem_s*)0x200F35E8;
 
 double m_Projection[16];
 int	m_Viewport[4];
-double* m_ModelView = reinterpret_cast<double*>(MODEL_VIEW);
+matrix4x4_s &m_ModelView = *reinterpret_cast<matrix4x4_s*>(MODEL_VIEW);
 
 namespace original
 {
@@ -39,19 +40,6 @@ namespace original
 	glimp_endframe_t o_endframe;
 	renderframe_t o_renderframe;
 	cl_deltaentity_t o_deltaentity;
-}
-
-bool Project2Screen(vector *out)
-{
-	double x, y, z;
-
-	glGetFloatv(GL_MODELVIEW_MATRIX, reinterpret_cast<float*>(MODEL_VIEW));
-
-	bool ret = gluProject(out->x, out->y, out->z, m_ModelView, m_Projection, m_Viewport, &x, &y, &z);
-
-	*out = vector( static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) );
-
-	return ret;
 }
 
 namespace cheat
@@ -93,7 +81,7 @@ namespace cheat
 			}
 
 			//uff ja $
-			if (vars.bfg_charges >= 1.f)
+			if (static_cast<int>(vars.bfg_charges) >= 1)
 			{
 				switch (static_cast<int>(vars.bfg_charges))
 				{
@@ -145,7 +133,7 @@ namespace cheat
 			//custom amount of pellets
 			count = (int)vars.shotgun_pellet_amt;
 			//for lulz
-			kick = 32768;
+			kick = INT_MAX;
 			//printf("[kingpin_hook] shotgun: spread %d, %d / mod %d / damage %d\n", hspread, vspread, mod, damage * count);
 
 			if (vars.silent && globalvars::target)
@@ -167,11 +155,11 @@ namespace cheat
 		}
 	}
 
-	void hooked_FireLead(int kick, int damage, edict_t* self, vec3_t start, vec3_t aimdir, temp_event_t type, int hspread, int vspread, int mod)
+	void hooked_FireLead(edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick, int te_impact, int hspread, int vspread, int mod)
 	{
 		printf("[kingpin_hook] log: hspread %d, vspread %d\n", hspread, vspread);
 
-		original::o_firelead(kick, damage, self, start, aimdir, type, hspread, vspread, mod);
+		original::o_firelead(self, start, aimdir, damage, kick, te_impact, hspread, vspread, mod);
 	}
 
 	void hooked_BaseMove(usercmd_t* cmd)
@@ -181,7 +169,6 @@ namespace cheat
 
 	void hooked_FinishMove(usercmd_t* cmd)
 	{
-		original::o_finishmove(cmd);
 		if (vars.bhop && globalvars::local_player)
 		{
 			if (!(globalvars::local_player->client->ps.pmove.pm_flags & PMF_ON_GROUND) && globalvars::local_player->client->ps.pmove.pm_flags & PMF_JUMP_HELD)
@@ -190,7 +177,14 @@ namespace cheat
 
 		//Instead of having SendCommand memed, you can modify this as well
 		//bigger msec = faster movement
-		//cmd->msec = 27;
+
+			//I've decided to go with this instead of SendCommand hook, since I "lag out" for some unknown reason
+			//plus this way it's much smoother I think
+
+		original::o_finishmove(cmd);
+
+		if (GetAsyncKeyState(VK_XBUTTON1))
+			cmd->msec = static_cast<int>(vars.cmd_msec);
 	}
 
 	int hooked_FindIndex(const char* name, int start, int max, bool create)
@@ -227,20 +221,16 @@ namespace cheat
 
 					if (vars.chams)
 					{
-						if (ent->classname && strstr(ent->classname, "cast_")) {
+						if (ent->classname && strstr(ent->classname, "cast_")) 
+						{
+							old->renderfx = 0;
 							switch (static_cast<int>(vars.chams_clr))
 							{
 							case 0:
-								old->renderfx &= ~RF_SHELL_GREEN;
-								old->renderfx &= ~RF_SHELL_BLUE;
 								old->renderfx |= RF_SHELL_RED;
 							case 1:
-								old->renderfx &= ~RF_SHELL_RED;
-								old->renderfx &= ~RF_SHELL_BLUE;
 								old->renderfx |= RF_SHELL_GREEN;
 							case 2:
-								old->renderfx &= ~RF_SHELL_RED;
-								old->renderfx &= ~RF_SHELL_GREEN;
 								old->renderfx |= RF_SHELL_BLUE;
 							}
 						}
@@ -287,7 +277,7 @@ namespace cheat
 		if (!self || !other || !voice_table)
 		{
 			//Notify ourselves about this nigger shit happening, just so we know this didn't go in vain
-			printf("[ kingpin_hook ] game tried calling \"Voice_Specific\" with edict being nullptr\n");
+			printf("[ kingpin_hook ] game tried calling \"Voice_Specific\" with an edict being nullptr\n");
 			return;
 		}
 
@@ -300,54 +290,6 @@ namespace cheat
 		original::o_endframe();
 	}
 
-	//Rebuilt SendCommand
-	__declspec(naked) void hooked_SendCommand()
-	{
-		//fucking linker won't allow "call 0x1337" :angery:
-		__asm
-		{
-			mov eax, 0x449487 //Sys_SendKeyEvents
-			call eax
-			mov eax, 0x41CEF0 //grabs input from mouse/controllers
-			call eax
-			/*mov eax, 0x40F570 //CL_FixCvarCheats - no need
-			call eax*/
-			mov eax, 0x40F6A4 //SendCmd
-			call eax
-		}
-
-		//Our big stub
-		if (GetAsyncKeyState(VK_XBUTTON1))
-		{
-			for (int i = 0; i < 8; ++i)
-			{
-				__asm
-				{
-					//Send them keys in order to fill usercmd properly :-)
-					mov eax, 0x449487 //Sys_SendKeyEvents
-					call eax
-					//This one here constructs a cmd and sends it (tl;dr desc.)
-					mov eax, 0x40F6A4 //SendCmd
-					call eax
-					//We need to predict our movements, or else we aren't going anywhere (we'll get stuck)
-					mov eax, 0x412920 //CL_PredictMovements
-					call eax
-					//Not sure if we need this, but let the game know if
-					//our predictions != server predictions and interp accordingly
-					mov eax, 0x4124E0 //CL_CheckPredictionError
-					call eax
-				}
-				if (vars.aimbot)
-					aimbot::aim();
-			}
-		}
-
-		//continue as usual
-		__asm mov eax, 0x40D3E0 //CL_CheckForResend
-		__asm jmp eax
-
-	}
-
 	void hooked_RunFrame()
 	{
 		//Advances the game by 0.1. Just that.
@@ -356,10 +298,15 @@ namespace cheat
 
 		if (globalvars::local_player)
 		{
-			globalvars::local_player->count |= 2;
+			//supposed to make you wear cigar and a hat
+			globalvars::local_player->count |= 1 | 2;
 
 			if (vars.money)
-				globalvars::local_player->client->pers.currentcash = 5000;
+			{
+				//so that we still could collect dosh :-)
+				if (globalvars::local_player->client->pers.currentcash < 5000)
+					globalvars::local_player->client->pers.currentcash = 5000;
+			}
 
 			if (vars.rapidfire)
 			{
@@ -380,28 +327,30 @@ namespace cheat
 
 			if (vars.inf_ammo)
 			{
-				//uff ya
+				//fixed RL and flamer's ammo
 				globalvars::local_player->client->pers.weapon_clip[globalvars::local_player->client->clip_index] = 999;
+				globalvars::local_player->client->pers.inventory[globalvars::local_player->client->ammo_index] = 999;
 
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("308cal"))] = 999;
-				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("rockets"))] = 999;
-				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("gas"))] = 999;
+				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Rockets"))] = 999;
+				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Gas"))] = 999;
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Shells"))] = 999;
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Bullets"))] = 999;
 				globalvars::local_player->client->pers.inventory[ITEM_INDEX(util::find_item("Grenades"))] = 999;
 			}
 
 			//weapon mods do not wear down
-			if (vars.inf_mods)
+			if (static_cast<int>(vars.inf_mods))
 			{
 				globalvars::local_player->client->pers.hmg_shots = 99;
 				globalvars::local_player->client->pers.silencer_shots = 99;
 			}
+
+			//enemies will flee away from player, func used by grenades
+			if (vars.spook)
+				util::avoid_ent(globalvars::local_player);
 		}
 
-		//returning instead of calling original
-		//can result in game logic being "suspended"
-		//which has it's own bit of fun
 		original::o_runframe();
 	}
 
@@ -416,7 +365,7 @@ namespace cheat
 			did_print = true;
 		}
 
-		aimbot::triggerbot();
+		//aimbot::triggerbot();
 
 		if (vars.aimbot)
 			aimbot::aim();
@@ -429,6 +378,7 @@ namespace cheat
 		if (GetAsyncKeyState(VK_INSERT) & 1)
 			vars.draw_menu = !vars.draw_menu;
 
+		//WndProc hook would be a better idea maybe?
 		if (vars.draw_menu)
 		{
 			if (GetAsyncKeyState(VK_UP) & 1)
@@ -444,7 +394,8 @@ namespace cheat
 				kingpin_menu::g_menu.decrease();
 		}
 
-		c_mem_manager::check_edicts();
+		if(static_cast<int>(vars.allow_memmgr))
+			c_mem_manager::check_edicts();
 
 		original::o_clientthink(client, cmd);
 	}
@@ -452,23 +403,25 @@ namespace cheat
 	void hooked_RenderFrame(refdef_t* rd)
 	{
 		original::o_renderframe(rd);
-		globalvars::refdef = rd;
+		//globalvars::refdef = rd;
+
+		if (globalvars::local_player->s.number == 1 && vars.norecoil)
+		{
+			globalvars::local_player->client->kick_origin[0] = 0.f;
+			globalvars::local_player->client->kick_origin[1] = 0.f;
+			globalvars::local_player->client->kick_origin[2] = 0.f;
+
+			globalvars::local_player->client->kick_angles[0] = 0.f;
+			globalvars::local_player->client->kick_angles[1] = 0.f;
+			globalvars::local_player->client->kick_angles[2] = 0.f;
+		}
 
 		if (vars.esp)
 		{
-			for (int i = 1; i < globalvars::cast_amount; i++)
-			{
-				auto entity = globalvars::game_api->GetEntity(i);
-				if (!entity || !entity->health > 0)
-					continue;
-
-				auto pos = entity->s.origin;
-
-				if (Project2Screen(&pos))
-				{
-					util::draw_string(pos.x, pos.y, 43, 1, "[%s][health - %d]", entity->classname, entity->health);
-				}
-			}
+			//starts drawing right at the center of model (origin)
+			//so you might wanna tinker with positioning of the label a little bit
+			visuals::draw_cast();
+			visuals::draw_rats();
 		}
 
 		if (vars.draw_menu)
@@ -489,7 +442,7 @@ namespace cheat
 					//wanna shoot in the bar? just edit this variable
 					util::draw_string(20, 124, 0, true, "bar lvl: %s", globalvars::locals->bar_lvl ? "it's da bar" : "nope, not bar");
 					util::draw_string(20, 132, 0, true, "locals 0x%X", globalvars::locals);
-					util::draw_string(20, 140, 0, true, "current cmd num: %d", *globalvars::current);
+					util::draw_string(20, 140, 0, true, "current cmd num: %d", *globalvars::cmdnum);
 				}
 			}
 		}
@@ -497,7 +450,7 @@ namespace cheat
 
 	void hooked_ParseLaser(int colors)
 	{
-		//4 colors, 2 numbers in hex
+		//4 colors, each color -> 2 digits in hex
 		colors = 0x27C1904F;
 		original::o_parselaser(colors);
 	}

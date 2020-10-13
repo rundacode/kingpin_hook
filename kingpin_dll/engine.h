@@ -199,7 +199,14 @@ typedef struct cast_memory_s
 } cast_memory_t;
 
 struct matrix3x3_s {
-	float matrix[9];
+	float matrix_x[3];
+	float matrix_y[3];
+	float matrix_z[3];
+};
+
+struct matrix4x4_s
+{
+	float m[16];
 };
 
 typedef enum {
@@ -973,7 +980,7 @@ typedef struct
 //
 // functions exported by the game subsystem
 //
-typedef struct
+typedef struct game_export_s
 {
 	int			apiversion;
 
@@ -1157,7 +1164,9 @@ typedef struct
 	int num_unk3;
 	void* unk3s;
 
-	matrix3x3_s unk_matrix;
+	vec3_t v_forward;
+	vec3_t v_right;
+	vec3_t v_up;
 } refdef_t;
 
 

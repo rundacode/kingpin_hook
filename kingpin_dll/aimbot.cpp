@@ -115,7 +115,7 @@ namespace aimbot
 
 			if (strstr(ent->classname, "cast_") && !strstr(ent->classname, "cast_bum_sit")) //bums dindu nuffin
 			{				
-				//Blunt has enormous amount of health (~150k) and not godmodded
+				//Blunt has enormous amount of health (~150k) and is not godmodded
 				//But I'll put this check anyway
 				if (ent->flags & FL_GODMODE)
 					continue;
@@ -145,6 +145,7 @@ namespace aimbot
 	}
 
 	//todo: find out why this shit traces god knows where
+	//do we really need this?
 	void triggerbot()
 	{
 		if (!globalvars::refdef)
@@ -153,19 +154,9 @@ namespace aimbot
 		vec3_t start, forward, right, end;
 		trace_t trace;
 		
+		util::angle_vectors(globalvars::local_player->client->v_angle, forward, right, 0);
 
-		vec3_t origin{ globalvars::local_player->s.origin.x, globalvars::local_player->s.origin.y, globalvars::local_player->s.origin.z  };
-		vec3_t offset{ 0,0,0 };
-
-		util::angle_vectors(&globalvars::local_player->s.angles.x, forward, right, 0);
-
-		//util::projsrc(globalvars::local_player->client, origin, offset, forward, right, start);
-		util::vector_ma(start, 4096.f, forward, end);
-
-		//debug
-		util::draw_line(origin, end);
-
-		trace = globalvars::game_import->trace(start, vec3_origin, vec3_origin, forward, globalvars::local_player, MASK_SHOT);
+		trace = globalvars::game_import->trace(globalvars::refdef->vieworg, vec3_origin, vec3_origin, forward, globalvars::local_player, MASK_SHOT);
 		if (trace.ent && trace.fraction >= 0.97f)
 		{
 			if (strstr(trace.ent->classname, "cast_"))

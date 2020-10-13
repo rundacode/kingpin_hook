@@ -5,7 +5,7 @@ namespace kingpin_menu
 {
 	void menu::add_item(std::string name, std::string desc, float* val, float min = 0, float max = 1)
 	{
-		item element = item(name, desc, val, min, max);
+		const item element = item(name, desc, val, min, max);
 
 		this->items.push_back(element);
 	}
@@ -63,11 +63,12 @@ namespace kingpin_menu
 		menu_title = "kingpin hook";
 
 		add_item("aimbot", "locks onto hostile enemies", &vars.aimbot);
-		add_item("silent aim", "invisible aiming at enemies", &vars.silent);
+		add_item("silent aim", "invisible lock-on", &vars.silent);
 		add_item("autoshoot", "starts shooting if there's a valid enemy", &vars.autoshoot);
 		add_item("norecoil", "removes gun recoil", &vars.norecoil);
 		add_item("nospread", "forces bullet weapons to have no spread", &vars.nospread);
 		add_item("esp", "well, it's esp", &vars.esp);
+		add_item("item esp", "esp for items (weps, ammo etc)", &vars.item_esp);
 		add_item("bunnyhop", "forces player to jump and gain momentum", &vars.bhop);
 		add_item("wallhack", "renders entities through walls", &vars.wallhack);
 		add_item("chams", "npcs are drawn in solid bright color", &vars.chams);
@@ -80,8 +81,10 @@ namespace kingpin_menu
 		add_item("infinite ammo", "self-explainatory", &vars.inf_ammo);
 		add_item("unlimited mods", "weapon mods never break", &vars.inf_mods);
 		add_item("rapid fire", "weapons always ready to shoot", &vars.rapidfire);
-		add_item("randomize skins", "spawned npcs will look different instead of using default skins", &vars.rand_skin);
-
+		add_item("spooky player", "enemies will attempt to run away from you", &vars.spook, 0, 1);
+		add_item("speedhack", "changes msec value of current usercmd", &vars.cmd_msec, 10.f, 100.f);
+		add_item("randomize skins", "spawned npcs will look different instead of using default skins", &vars.rand_skin); //uhhh not implemented
+		add_item("allow mem manager", "frees dead edicts", &vars.allow_memmgr);
 		add_item("debug info", "display debug information", &vars.debug);
 
 		h = items.size() * spacing;
@@ -98,7 +101,7 @@ namespace kingpin_menu
 		for (size_t i = 0; i < items.size(); i++)
 		{
 			item element = items[i];
-			int y_offset = i * spacing;
+			const int y_offset = static_cast<int>(i) * spacing;
 
 			if (i == selecteditem)
 				globalvars::ref_api->DrawFill(x, y + y_offset, w, 8, 111);

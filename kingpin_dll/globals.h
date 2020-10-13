@@ -12,6 +12,7 @@ using executebuf_t = void(__cdecl*)();
 using startsound_t = void(__cdecl*)(const char*);
 using isvisible_t = bool(__cdecl*)(edict_t* self, edict_t* ent);
 using edictfree_t = void(__cdecl*)(edict_t* ent);
+using avoident_t = void(__cdecl*)(edict_t*);
 using raytrace_t = trace_t(__cdecl*)(vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
 using anglevec_t = void(__cdecl*)(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
 using vecangle_t = void(__cdecl*)(vector &vec, vector &angles );
@@ -28,12 +29,12 @@ namespace util
 	extern printf_t com_printf;
 	extern finditem_t find_item;
 	extern isvisible_t is_visible;
+	extern avoident_t avoid_ent;
 	extern findbyclass_t find_by_classname;
 	extern edictfree_t free_entity;
 	extern anglevec_t angle_vectors;
 	extern vecangle_t vector_angle;
 	extern raytrace_t trace;
-	extern projsrc_t projsrc;
 	extern dmgthrualpha_t candamagethrualpha;
 	extern candamage_t candamage;
 	extern vectorma_t vector_ma;
@@ -78,6 +79,7 @@ namespace globalvars {
 	
 	extern edict_t* local_player;
 	extern edict_t* target;
+	extern edict_t* edicts;
 
 	extern connstate_t* connstate;
 	extern refdef_t* refdef;
@@ -90,8 +92,10 @@ namespace globalvars {
 	extern vector* viewangles;
 	extern vector aim_angles;
 	extern vec3_t v_aim_angles;
-	extern int* current;
+	extern int* cmdnum;
 	extern usercmd_t* usercmds;
+
+	extern object_bounds_t* objbounds;
 
 	extern usercmd_t* get_usercmd(int num);
 

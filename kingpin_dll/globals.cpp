@@ -12,7 +12,7 @@ startsound_t util::playsound = (startsound_t)0x43BEF0;
 isvisible_t util::is_visible = (isvisible_t)0x2002DDE0;
 executebuf_t util::executebuf = (executebuf_t)0x41CEF0;
 raytrace_t util::trace = (raytrace_t)0x448C39;
-projsrc_t util::projsrc = (projsrc_t)0x200A3AD7;
+avoident_t util::avoid_ent = (avoident_t)0x200339DA;
 dmgthrualpha_t util::candamagethrualpha = (dmgthrualpha_t)0x20040A10;
 candamage_t util::candamage = (candamage_t)0x20040B30;
 
@@ -41,12 +41,14 @@ namespace globalvars {
 
 	edict_t* local_player = nullptr;
 	edict_t* target = nullptr;
+	edict_t* edicts = (edict_t*)0x20150694;
 
 	connstate_t* connstate = (connstate_t*)0x127A180;
 
-	refdef_t* refdef = nullptr;
+	refdef_t* refdef = (refdef_t*)0x01353288;
 
 	level_locals_t* locals = (level_locals_t*)0x201506C0;
+	object_bounds_t* objbounds = (object_bounds_t*)0x2014E540;
 
 	int cast_amount = globalvars::locals->num_characters;
 	edict_t** cast_list = globalvars::locals->characters;
@@ -54,7 +56,7 @@ namespace globalvars {
 	vector* viewangles = (vector*)0x01353274;
 	vector aim_angles = { 0,0,0 };
 	vec3_t v_aim_angles = { 0,0,0 };
-	int* current = (int*)0x127A260;
+	int* cmdnum = (int*)0x127A260;
 	usercmd_t* usercmds = (usercmd_t*)0x134F50C;
 
 	//To get the most recent usercmd -> pass "current"
@@ -99,7 +101,7 @@ namespace util {
 		vec3_t	spot2;
 		trace_t	trace;
 
-		auto VecCopy = [&](const vector a, vec3_t b) -> void
+		auto VecCopy = [&](const vector &a, vec3_t b) -> void
 		{
 			b[0] = a.x;
 			b[1] = a.y;
@@ -111,7 +113,7 @@ namespace util {
 		VecCopy(target->s.origin, spot2);
 		spot2[2] += target->viewheight;
 		trace = globalvars::game_import->trace(spot1, vec3_origin, vec3_origin, spot2, globalvars::local_player, 
-			CONTENTS_SOLID|CONTENTS_AUX|CONTENTS_LAVA|CONTENTS_SLIME);
+			CONTENTS_SOLID/*|CONTENTS_AUX|CONTENTS_LAVA|CONTENTS_SLIME*/);
 
 		if (trace.fraction == 1.0)
 			return true;

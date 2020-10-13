@@ -9,7 +9,7 @@ void c_mem_manager::check_edicts()
 	for (size_t i = 0; i < MAX_CHARACTERS; i++)
 	{
 		auto edict = globalvars::locals->characters[i];
-		if (!edict || edict->health > 0)
+		if (!edict || edict->health > 0 || edict->inuse) //TODO: Find out how to check whether the guy is completely gibbed
 			continue;
 
 		if (strstr(edict->classname, "cast_"))

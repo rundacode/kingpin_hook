@@ -7,7 +7,7 @@
 //game functions
 using firebullet_t = void(__cdecl*)(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int mod);
 using fireshotgun_t = void(__cdecl*)(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int hspread, int vspread, int count, int mod);
-using firelead_t = void(__cdecl*)(int kick, int damage, edict_t* self, vec3_t start, vec3_t aimdir, temp_event_t type, int hspread, int vspread, int mod);
+using firelead_t = void(__cdecl*)(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick, int te_impact, int hspread, int vspread, int mod);
 using basemove_t = void(__cdecl*)(usercmd_t* cmd);
 using runframe_t = void(__cdecl*)();
 using calcviewangles_t = void(__cdecl*)(); //00406C70

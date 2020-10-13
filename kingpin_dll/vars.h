@@ -7,6 +7,7 @@ struct vars_t {
 	float norecoil = 0.f;
 	float nospread = 0.f;
 	float esp = 0.f;
+	float item_esp = 0.f;
 	float wallhack = 0.f;
 	float chams = 0.f;
 	float chams_clr = 0.f;
@@ -23,6 +24,9 @@ struct vars_t {
 	float debug = 1.f;
 	float colorlist = 0.f;
 	float rand_skin = 0.f;
+	float cmd_msec = 20.f;
+	float spook = 0.f;
+	float allow_memmgr = 0.f;
 
 	bool draw_menu = false;
 };
