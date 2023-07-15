@@ -72,13 +72,13 @@ namespace aimbot
 
 		if (vars.silent)
 		{
-			globalvars::v_aim_angles[0] = pitch * (180 / M_PI);
-			globalvars::v_aim_angles[1] = yaw * (180 / M_PI); //preserve rotation
+			globalvars::v_aim_angles[0] = pitch * (180 / static_cast<float>(M_PI));
+			globalvars::v_aim_angles[1] = yaw * (180 / static_cast<float>(M_PI)); //preserve rotation
 		}
 		else
 		{
-			viewangles->x = pitch * (180 / M_PI) - delta_pitch;
-			viewangles->y = yaw * (180 / M_PI) - delta_yaw;
+			viewangles->x = pitch * (180 / static_cast<float>(M_PI)) - delta_pitch;
+			viewangles->y = yaw * (180 / static_cast<float>(M_PI)) - delta_yaw;
 		}
 
 		if (vars.autoshoot)
@@ -142,34 +142,5 @@ namespace aimbot
 
 		globalvars::target = temp_target;
 		return temp_target;
-	}
-
-	//todo: find out why this shit traces god knows where
-	//do we really need this?
-	void triggerbot()
-	{
-		if (!globalvars::refdef)
-			return;
-
-		vec3_t start, forward, right, end;
-		trace_t trace;
-		
-		util::angle_vectors(globalvars::local_player->client->v_angle, forward, right, 0);
-
-		trace = globalvars::game_import->trace(globalvars::refdef->vieworg, vec3_origin, vec3_origin, forward, globalvars::local_player, MASK_SHOT);
-		if (trace.ent && trace.fraction >= 0.97f)
-		{
-			if (strstr(trace.ent->classname, "cast_"))
-			{
-				printf("[kingpin_hook] triggerbot caught entity\n");
-				__asm
-				{
-					mov eax, 0x40b7e0
-					call eax
-					mov eax, 0x40b7f0
-					call eax
-				}
-			}
-		}
 	}
 }

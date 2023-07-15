@@ -27,7 +27,7 @@ namespace visuals
 
 		if (z <= 0.001)
 			return false;
-		// Notice how i invert this dotproduct (that's what solved my issue)
+
 		x = xc - -DotProduct(trans, globalvars::refdef->v_right) * xc / (z * px);
 		y = yc - DotProduct(trans, globalvars::refdef->v_up) * yc / (z * py);
 		return true;
@@ -39,7 +39,7 @@ namespace visuals
 		{
 			float x, y = 0;
 
-			edict_t* cast = globalvars::cast_list[i];
+			const edict_t* cast = globalvars::cast_list[i];
 			if (!cast || !cast->inuse || cast->health <= 0)
 				continue;
 
@@ -47,29 +47,29 @@ namespace visuals
 
 			if (w2s(origin, x, y))
 			{
-				util::draw_string(static_cast<int>(x), static_cast<int>(y), 62, true, "%s | %d", cast->name, cast->health);
+				util::draw_string(static_cast<int>(x), static_cast<int>(y), font_align::FONT_CENTER, 62, true, "[%s | %d]", cast->name, cast->health);
 			}
 		}
 	}
 
 	void draw_rats()
 	{
+		const auto rat_model = globalvars::game_import->modelindex((char*)"models/actors/rat/rat.mdx");
 		for (int i = 1; i < globalvars::game_api->num_edicts; i++)
 		{
 			float x, y = 0;
 
-			edict_t* edict = &globalvars::game_api->edicts[i];
+			const edict_t* edict = &globalvars::game_api->edicts[i];
 			if (!edict || !edict->inuse || edict->health <= 0)
 				continue;
 
-			//most likely very inefficient
-			if (edict->s.model_parts[0].modelindex == globalvars::game_import->modelindex((char*)"models/actors/rat/rat.mdx"))
+			if (edict->s.model_parts[0].modelindex == rat_model)
 			{
 				vec3_t origin = { edict->s.origin.x, edict->s.origin.y, edict->s.origin.z};
 
 				if (w2s(origin, x, y))
 				{
-					util::draw_string(static_cast<int>(x), static_cast<int>(y), 62, true, "nigger rat");
+					util::draw_string(static_cast<int>(x), static_cast<int>(y), font_align::FONT_CENTER, 62, true, "Nigger Rat");
 				}
 			}
 		}

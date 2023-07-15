@@ -24,6 +24,15 @@ using projsrc_t = void(__cdecl*)(gclient_t *client, vec3_t point, vec3_t distanc
 using dmgthrualpha_t = BOOL(__cdecl*)(trace_t trace, edict_t* targ, edict_t* inflictor, vec3_t dst);
 using candamage_t = BOOL(__cdecl*)(edict_t* target, edict_t* attacker);
 
+using test_t = int(void*, void*);
+
+enum class font_align : short
+{
+	FONT_NONE,
+	FONT_CENTER,
+	FONT_RIGHT
+};
+
 namespace util
 {
 	extern printf_t com_printf;
@@ -47,7 +56,8 @@ namespace util
 	extern addtext_t addtext;
 	extern executebuf_t executebuf;
 
-	extern void draw_string(int x, int y, int background, bool is_white, const char* string, ...);
+	extern void draw_string(int x, int y, font_align align, int background, bool is_white, const char* string, ...);
+	extern void draw_string(int x, int y, float* clr, font_align, float scale, float alpha, bool clown, const char* string, ...);
 	extern void dump_edicts(int amt);
 	extern void hook_iat(const char* iat_module_name, const char* import_module_name, const char* fn_name, void* new_fn);
 	extern int draw_line(vector org, vector target, int a1 = 4, int a2 = 25);

@@ -202,62 +202,52 @@ namespace cheat
 		static bool did_print = false;
 		if (!did_print)
 		{
-			printf("[kingpin_hook] frame: 0x%X\n", frame);
+			printf("[kingpin_hook] frame: 0x%p\n", frame);
 			did_print = true;
 		}
 
-		if (GetModuleHandle("gamex86.dll"))
+		if (globalvars::game_api)
 		{
-			if (globalvars::game_api)
+			if (auto ent = globalvars::game_api->GetEntity(old->number))
 			{
-				auto ent = globalvars::game_api->GetEntity(old->number);
-				if (globalvars::local_player && ent)
+				if (vars.chams)
 				{
-					if (ent == globalvars::local_player)
+					if (ent->classname && strstr(ent->classname, "cast_"))
 					{
-						old->effects |= EF_COLOR_SHELL;
-						old->renderfx |= RF_SHELL_RED;
-					}
-
-					if (vars.chams)
-					{
-						if (ent->classname && strstr(ent->classname, "cast_")) 
+						old->renderfx = 0;
+						switch (static_cast<int>(vars.chams_clr))
 						{
-							old->renderfx = 0;
-							switch (static_cast<int>(vars.chams_clr))
-							{
-							case 0:
-								old->renderfx |= RF_SHELL_RED;
-							case 1:
-								old->renderfx |= RF_SHELL_GREEN;
-							case 2:
-								old->renderfx |= RF_SHELL_BLUE;
-							}
+						case 0:
+							old->renderfx |= RF_SHELL_RED;
+						case 1:
+							old->renderfx |= RF_SHELL_GREEN;
+						case 2:
+							old->renderfx |= RF_SHELL_BLUE;
 						}
 					}
-					else
+				}
+				else
+				{
+					if (ent->classname && strstr(ent->classname, "cast_"))
 					{
-						if (ent && ent->classname && strstr(ent->classname, "cast_"))
-						{
-							old->renderfx &= ~RF_SHELL_RED;
-							old->renderfx &= ~RF_SHELL_GREEN;
-							old->renderfx &= ~RF_SHELL_BLUE;
-						}
+						old->renderfx &= ~RF_SHELL_RED;
+						old->renderfx &= ~RF_SHELL_GREEN;
+						old->renderfx &= ~RF_SHELL_BLUE;
 					}
+				}
 
-					if (vars.wallhack)
-					{
-						old->renderfx |= RF_DEPTHHACK;
+				if (vars.wallhack)
+				{
+					old->renderfx |= RF_DEPTHHACK;
 
-						if (ent->classname && strstr(ent->classname, "item_")) //make items highlighted, sort of.
-							old->effects |= (1 << 4); //if you wonder why crates suddenly "explode" or vent bits have fires on them, this is why
-					}
-					else
-					{
-						old->renderfx &= ~RF_DEPTHHACK;
-						if (ent->classname && strstr(ent->classname, "item_"))
-							old->effects &= ~(1 << 4);
-					}
+					if (ent->classname && strstr(ent->classname, "item_")) //make items highlighted, sort of.
+						old->effects |= (1 << 4); //if you wonder why crates suddenly "explode" or vent bits have fires on them, this is why
+				}
+				else
+				{
+					old->renderfx &= ~RF_DEPTHHACK;
+					if (ent->classname && strstr(ent->classname, "item_"))
+						old->effects &= ~(1 << 4);
 				}
 			}
 		}
@@ -375,7 +365,7 @@ namespace cheat
 				globalvars::target = nullptr;
 		}
 
-		if (GetAsyncKeyState(VK_INSERT) & 1)
+		if (GetAsyncKeyState(VK_XBUTTON2) & 1)
 			vars.draw_menu = !vars.draw_menu;
 
 		//WndProc hook would be a better idea maybe?
@@ -404,6 +394,8 @@ namespace cheat
 	{
 		original::o_renderframe(rd);
 		//globalvars::refdef = rd;
+		if (!globalvars::local_player)
+			return;
 
 		if (globalvars::local_player->s.number == 1 && vars.norecoil)
 		{
@@ -432,25 +424,34 @@ namespace cheat
 		{
 			if (vars.debug)
 			{
-				util::draw_string(20, 100, 0, true, "viewangles[x %.2f / y %.2f / z %.2f]",
-					rd->viewangles[0], rd->viewangles[1], rd->viewangles[2]);
-				util::draw_string(20, 108, 0, true, "cast amount %d", globalvars::cast_amount);
+				util::draw_string(20, 100, font_align::FONT_NONE, 0, true, "viewangles[x %.2f / y %.2f / z %.2f]", rd->viewangles[0], rd->viewangles[1], rd->viewangles[2]);
+
+				util::draw_string(20, 108, font_align::FONT_NONE, 0, true, "cast amount %d", globalvars::cast_amount);
+
 				if (*globalvars::connstate == connstate_t::ca_active && globalvars::target)
-					util::draw_string(20, 116, 0, true, "target 0x%X, %s, %d HP", globalvars::target, globalvars::target->classname, globalvars::target->health);
-				if (GetModuleHandle("gamex86.dll") && globalvars::locals)
+					util::draw_string(20, 116, font_align::FONT_NONE, 0, true, "target 0x%X, %s, %d HP", globalvars::target, globalvars::target->classname);
+
+				if (globalvars::locals)
 				{
+					//globalvars::ref_api->DrawFillAlpha(20, 124, 260, 40, 0.78f, 1.f, 0, 0.5f);
 					//wanna shoot in the bar? just edit this variable
-					util::draw_string(20, 124, 0, true, "bar lvl: %s", globalvars::locals->bar_lvl ? "it's da bar" : "nope, not bar");
-					util::draw_string(20, 132, 0, true, "locals 0x%X", globalvars::locals);
-					util::draw_string(20, 140, 0, true, "current cmd num: %d", *globalvars::cmdnum);
+					util::draw_string(20, 124, font_align::FONT_NONE, 0, true, "bar lvl: %s", globalvars::locals->bar_lvl ? "it's da bar" : "nope, not bar");
+					util::draw_string(20, 132, font_align::FONT_NONE, 0, true, "locals 0x%X", globalvars::locals);
+					util::draw_string(20, 140, font_align::FONT_NONE, 0, true, "current cmd num: %d", *globalvars::cmdnum);
 				}
+
+				float color[3] = { 1.f, 1.f, 1.f };
+
+				util::draw_string(globalvars::refdef->width / 2, globalvars::refdef->height - 25, color, font_align::FONT_CENTER, 1.f, 1.f, 1, "[GCFramework Kingpin]");
 			}
 		}
 	}
 
 	void hooked_ParseLaser(int colors)
 	{
-		//4 colors, each color -> 2 digits in hex
+		//4 colors (RGBA) encoded in one int - 255 max colors, maybe refers to game palette
+		//0x12345678
+		//__R_G_B_A_
 		colors = 0x27C1904F;
 		original::o_parselaser(colors);
 	}

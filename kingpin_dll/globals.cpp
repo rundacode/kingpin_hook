@@ -71,7 +71,7 @@ namespace util {
 	
 	const char* rand_skin = "001 001 001";
 
-	void draw_string(int x, int y, int background, bool is_white, const char* string, ...)
+	void draw_string(int x, int y, font_align align, int background, bool is_white, const char* string, ...)
 	{
 		char buffer[256];
 		va_list va;
@@ -80,6 +80,11 @@ namespace util {
 		va_end(va);
 
 		int width = 8 * strlen(buffer);
+
+		if (align == font_align::FONT_CENTER)
+			x -= width / 2;
+		else if (align == font_align::FONT_RIGHT)
+			x -= width;
 
 		char* text = buffer;
 
@@ -94,6 +99,40 @@ namespace util {
 		}
 	}
 
+	__declspec(noinline) void draw_string(int x, int y, float* clr, font_align align, float scale, float alpha, bool clown, const char* string, ...)
+	{
+		char buffer[256];
+		va_list va;
+		va_start(va, string);
+		vsprintf_s(buffer, string, va);
+		va_end(va);
+
+		float m_color[3] = { 1.f, 1.f, 1.f };
+		if (!clr)
+			clr = m_color;
+
+		int width = static_cast<int>(11 * scale) * strlen(buffer);
+		char* text = buffer;
+
+		if(align == font_align::FONT_CENTER)
+			x -= width /2;
+		else if(align == font_align::FONT_RIGHT)
+			x -= width;
+
+		while (*text)
+		{
+			//roll a different color for each character
+			vec3_t clown_clr = { static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+								static_cast <float> (rand()) / static_cast <float> (RAND_MAX),
+								static_cast <float> (rand()) / static_cast <float> (RAND_MAX) };
+
+
+			globalvars::ref_api->DrawCharOverload(x, y, *text, clown ? clown_clr : clr, scale, alpha);
+			x += static_cast<int>(floorf(11 * scale)) + (scale == 1.f ? 0 : 1); //umm :)
+			text++;
+		}
+	}
+
 	//Shoots a trace. Easy.
 	bool _trace(edict_t* target, bool check_transparent)
 	{
@@ -101,11 +140,12 @@ namespace util {
 		vec3_t	spot2;
 		trace_t	trace;
 
-		auto VecCopy = [&](const vector &a, vec3_t b) -> void
+		//I know this is gay
+		auto VecCopy = [&](const vector &from, vec3_t to) -> void
 		{
-			b[0] = a.x;
-			b[1] = a.y;
-			b[2] = a.z;
+			to[0] = from.x;
+			to[1] = from.y;
+			to[2] = from.z;
 		};
 
 		VecCopy(globalvars::local_player->s.origin, spot1);
@@ -122,13 +162,6 @@ namespace util {
 				return (util::candamagethrualpha(trace, target, globalvars::local_player, spot2));
 
 		return false;
-	}
-
-	void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc)
-	{
-		vecc[0] = veca[0] + scale * vecb[0];
-		vecc[1] = veca[1] + scale * vecb[1];
-		vecc[2] = veca[2] + scale * vecb[2];
 	}
 
 	edict_t* get_cast(int index)

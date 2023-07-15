@@ -101,7 +101,8 @@ MATHLIB
 ==============================================================
 */
 
-typedef float vec_t;
+
+using vec_t = float;
 typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
@@ -407,8 +408,8 @@ public:
 	vector operator - (vector const &o) { vector v = *this; v -= o; return v; }
 
 	float dot(const vector& Vec) { return this->x * Vec.x + this->y * Vec.y + this->z * Vec.z; }
-	float length() { return sqrt(x*x + y * y + z * z); }
-	float length2d() { return sqrt(x*x + y * y); }
+	float length() { return sqrtf(x*x + y * y + z * z); }
+	float length2d() { return sqrtf(x*x + y * y); }
 	void normalize() { *this /= length(); }
 
 	float distance(vector const &other) { vector Difference = *this - other; return Difference.length(); }

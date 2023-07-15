@@ -38,13 +38,18 @@ namespace ogl
 
 		glFlush();
 	}
+
+	void draw_snapline(GLfloat x, GLfloat y, GLfloat x1, GLfloat y1)
+	{
+
+	}
 }
 
 namespace cheat
 {
 	void WINAPI hooked_GLEnable(GLenum bit)
 	{
-		ogl::draw_box(30, 250, 0, 30, 60);
+		
 
 
 		original::o_glenable(bit);

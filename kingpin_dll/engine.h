@@ -1188,32 +1188,47 @@ typedef struct
 	struct image_s *(*RegisterSkin) (char *name);
 	struct image_s *(*RegisterPic) (char *name);
 	void(*SetSky) (char *name, float rotate, vec3_t axis);
+
+	//DWORD = stub, 4 bytes parameter
+	/*
+		refExport_t[9] = (int)R_Unknown_1;
+		refExport_t[8] = (int)R_Unknown_2;
+		thanks compiler...
+	*/
+	//These two are called during the startup, while loading a level
+	void(*Unknown_1)(float, float, float, float);
+	void(*Unknown_2)(DWORD, DWORD);
+	
 	void(*EndRegistration) (void);
-
-	void(*pad1);
-	void(*pad2);
-
 	void(*RenderFrame) (refdef_t *fd);
+	//I assume it is. It calls qglClear(0x100)
+	void(*GLClear)(void);
 
 	void(*DrawGetPicSize) (int *w, int *h, char *name);	// will return 0 0 if not found
 	void(*DrawPic) (int x, int y, char *name);
+
+	void(*DrawPicTransparent)(int x, int y, char* name, float alpha);
 	void(*DrawStretchPic) (int x, int y, int w, int h, char *name);
+	
+	void(*DrawStretchPicAlpha)(int x, int y, int w, int h, char* name, float alpha);
 
-	void(*pad3);
-	void(*pad4);
-	void(*pad5);
-	void(*pad6);
+	void(*DrawChar)(int x, int y, int character);
+	//Has some special conditions, otherwise seems the same?
+	void(*DrawChar_Special) (int x, int y, int c);
+	void(*DrawChar_NoteFont) (int x, int y, int c);
 
-	void(*DrawChar) (int x, int y, int c);
+	//x, y, your meme string, array of 3 floats (0.f - 1.f), scale (not limited), alpha (0 - 1.f)
+	void(*DrawCharOverload)(int x, int y, int character, float* clr, float scale, float alpha);
 
 	void(*DrawTileClear) (int x, int y, int w, int h, char *name);
-	void(*pad7);
-	void(*pad8);
 
+	//Uses Palette indeces to paint background
 	void(*DrawFill) (int x, int y, int w, int h, int c);
-	void(*DrawFadeScreen) (void);
 
-	// Draw images for cinematic rendering (which can have a different palette). Note that calls
+	//Uses RGBA (0 - 1.f) values instead of palette predefined ones
+	void(*DrawFillAlpha)(int x, int y, int width, int height, float r, float g, float b, float alpha);
+
+	void(*DrawFadeScreen) (void);
 	void(*DrawStretchRaw) (int x, int y, int w, int h, int cols, int rows, byte *data);
 
 	/*
@@ -1224,6 +1239,7 @@ typedef struct
 	void(*EndFrame) (void);
 
 	void(*AppActivate)(bool activate);
+	void(*GL_Unproject_STUB)(void);
 
 } refexport_t;
 
@@ -1262,10 +1278,6 @@ typedef struct
 	void(*Vid_MenuInit)(void);
 	void(*Vid_NewWindow)(int width, int height);
 } refimport_t;
-
-
-// this is the only function actually exported at the linker level
-typedef	refexport_t(*GetRefAPI_t) (refimport_t);
 
 extern refimport_t *	imports;
 extern refexport_t *	exports;

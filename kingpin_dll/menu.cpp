@@ -1,4 +1,4 @@
-#include "menu.h"
+﻿#include "menu.h"
 #include "globals.h"
 
 namespace kingpin_menu
@@ -37,14 +37,14 @@ namespace kingpin_menu
 		if (this->selecteditem > 0)
 			this->selecteditem--;
 		else
-			this->selecteditem = items.size() - 1;
+			this->selecteditem = static_cast<int32_t>(items.size()) - 1;
 
 		util::playsound("misc/menu1.wav");
 	}
 
 	void menu::down()
 	{
-		if (this->selecteditem < items.size() - 1)
+		if (this->selecteditem < static_cast<int32_t>(items.size()) - 1)
 			this->selecteditem++;
 		else
 			this->selecteditem = 0;
@@ -56,7 +56,7 @@ namespace kingpin_menu
 	{
 		x = 20;
 		y = 250;
-		w = 220;
+		w = 225;
 		bgcolor = 70;
 		spacing = 12;
 
@@ -94,7 +94,7 @@ namespace kingpin_menu
 
 	void menu::draw()
 	{
-		util::draw_string(x, y - 14, bgcolor, true, "[kingpin_hook]");
+		util::draw_string(x, y - 14, font_align::FONT_NONE, bgcolor, true, "[kingpin_hook]");
 		globalvars::ref_api->DrawFill(x - 1, y - 1, w + 2, h + 2, 251);
 		globalvars::ref_api->DrawFill(x, y, w, h, bgcolor);
 
@@ -104,15 +104,15 @@ namespace kingpin_menu
 			const int y_offset = static_cast<int>(i) * spacing;
 
 			if (i == selecteditem)
-				globalvars::ref_api->DrawFill(x, y + y_offset, w, 8, 111);
+				globalvars::ref_api->DrawFillAlpha(x, y + y_offset, w, 8, 0.76f, 1.f, 0.f, 0.75f);
 
-			util::draw_string(x, y + y_offset, 0, i == selecteditem, "%s", element.get_name());
-			util::draw_string(x + 200, y + y_offset, 0, i == selecteditem, "%.0f", element.get_float());
+			util::draw_string(x, y + y_offset, font_align::FONT_NONE, 0, i == selecteditem, "%s", element.get_name());
+			util::draw_string(x + 200, y + y_offset, font_align::FONT_NONE, 0, i == selecteditem, "%.0f", element.get_float());
 		}
 
 		item element = items[selecteditem];
 
-		util::draw_string(x, y + h + spacing, 39, true, "%s", element.get_desc());
+		util::draw_string(x, y + h + spacing, font_align::FONT_NONE, 39, true, "%s", element.get_desc());
 	}
 
 	menu g_menu;

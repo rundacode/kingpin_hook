@@ -54,9 +54,13 @@ namespace kingpin_menu
 	class menu
 	{
 	public:
+
 		menu()
 		{
-
+			x = y = w = h = 0;
+			bgcolor = spacing = 0;
+			selecteditem = 1;
+			is_menu_visible = false;
 		}
 
 		std::vector<item> items;
